@@ -297,10 +297,11 @@ jobs:
 
       - name: Build with Gradle
         run: |
-          gradle wrapper --gradle-version 8.5
+          # Download Gradle 8.5 directly so we don't use the broken Gradle 9.9.1
+          wget -q https://services.gradle.org/distributions/gradle-8.5-bin.zip
+          unzip -q gradle-8.5-bin.zip
           echo "sdk.dir=$ANDROID_SDK_ROOT" > local.properties
-          chmod +x ./gradlew
-          ./gradlew assembleDebug --no-daemon --stacktrace
+          ./gradle-8.5/bin/gradle assembleDebug --no-daemon --stacktrace
 
       - name: Upload APK
         if: always()
