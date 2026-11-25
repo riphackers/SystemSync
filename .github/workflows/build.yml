@@ -17,26 +17,22 @@ jobs:
           distribution: temurin
           java-version: 17
           
-      - name: Force Gradle Files and Build
+      - name: Show Directory Structure
         run: |
-          # If the files are missing at the root, create them so Gradle stops panicking
-          if [ ! -f settings.gradle.kts ]; then
-            echo 'rootProject.name = "SystemSync"' > settings.gradle.kts
-            echo 'include(":app")' >> settings.gradle.kts
-          fi
+          echo "Here are the files in your repo:"
+          ls -R
           
-          if [ ! -f build.gradle.kts ]; then
-            echo 'plugins {' > build.gradle.kts
-            echo '    id("com.android.application") version "8.2.0" apply false' >> build.gradle.kts
-            echo '    id("org.jetbrains.kotlin.android") version "1.9.20" apply false' >> build.gradle.kts
-            echo '}' >> build.gradle.kts
-          fi
+          echo "### 📁 REPO STRUCTURE" >> $GITHUB_STEP_SUMMARY
+          echo '```text' >> $GITHUB_STEP_SUMMARY
+          ls -R >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
 
-          gradle wrapper --gradle-version 8.5
+      - name: Build with Gradle
+        run: |
+          wget -q https://services.gradle.org/distributions/gradle-8.5-bin.zip
+          unzip -q gradle-8.5-bin.zip
           echo "sdk.dir=$ANDROID_SDK_ROOT" > local.properties
-          
-          chmod +x ./gradlew
-          ./gradlew assembleDebug --no-daemon --stacktrace
+          ./gradle-8.5/bin/gradle assembleDebug --no-daemon --stacktrace
           
       - name: Upload APK
         if: always()
