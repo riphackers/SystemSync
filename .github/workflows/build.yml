@@ -18,7 +18,7 @@ jobs:
           java-version: 17
 
       - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
+        uses: nttcom/setup-android@v1
 
       - name: Make gradlew executable
         run: chmod +x ./gradlew
