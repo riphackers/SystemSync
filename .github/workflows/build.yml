@@ -17,8 +17,15 @@ jobs:
           distribution: temurin
           java-version: 17
 
-      - name: Setup Android SDK
-        uses: nttcom/setup-android@v1
+      - name: Setup Android SDK (Manual)
+        run: |
+          # The ubuntu-latest runner comes with the Android SDK pre-installed!
+          # We just need to tell Gradle where it is.
+          echo "ANDROID_HOME=$ANDROID_SDK_ROOT" >> $GITHUB_ENV
+          echo "ANDROID_SDK_ROOT=$ANDROID_SDK_ROOT" >> $GITHUB_ENV
+          
+          # Accept licenses just in case
+          yes | $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager --licenses || true
 
       - name: Make gradlew executable
         run: chmod +x ./gradlew
