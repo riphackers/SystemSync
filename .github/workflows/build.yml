@@ -17,25 +17,23 @@ jobs:
           distribution: temurin
           java-version: 17
           
-      - name: Build with Gradle
+      - name: Generate Wrapper and Build
         run: |
-          wget -q https://services.gradle.org/distributions/gradle-8.5-bin.zip
-          unzip -q gradle-8.5-bin.zip
-          export ANDROID_HOME=$ANDROID_SDK_ROOT
-          export PATH=$PATH:$ANDROID_HOME/cmdline-tools/latest/bin
+          gradle wrapper --gradle-version 8.5
+          echo "sdk.dir=$ANDROID_SDK_ROOT" > local.properties
           
-          # The "|| true" makes sure the step doesn't stop so we can capture the error
-          ./gradle-8.5/bin/gradle assembleDebug --no-daemon --stacktrace > build_log.txt 2>&1 || true
+          chmod +x ./gradlew
           
-          echo "### 🚨 REAL BUILD ERRORS 🚨" >> $GITHUB_STEP_SUMMARY
+          # Run build and capture EVERYTHING
+          ./gradlew assembleDebug --no-daemon --stacktrace > full_log.txt 2>&1 || true
+          
+          echo "### FULL BUILD LOG" >> $GITHUB_STEP_SUMMARY
+          echo '```text' >> $GITHUB_STEP_SUMMARY
+          # Print the last 30 lines of the log (where the real error hides)
+          tail -n 30 full_log.txt >> $GITHUB_STEP_SUMMARY
           echo '```' >> $GITHUB_STEP_SUMMARY
-          # This grabs only the lines that contain Kotlin errors or failure messages
-          grep -E "e: file:///|FAILURE|What went wrong|Execution failed|Caused by" build_log.txt | head -n 20 >> $GITHUB_STEP_SUMMARY || echo "No specific code error found. The issue might be Gradle downloading." >> $GITHUB_STEP_SUMMARY
-          echo '```' >> $GITHUB_STEP_SUMMARY
           
-          # Fail the job manually if the APK wasn't built
           if [ ! -f app/build/outputs/apk/debug/app-debug.apk ]; then
-            echo "APK was not created."
             exit 1
           fi
           
