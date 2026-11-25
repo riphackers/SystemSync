@@ -17,25 +17,26 @@ jobs:
           distribution: temurin
           java-version: 17
           
-      - name: Generate Wrapper and Build
+      - name: Force Gradle Files and Build
         run: |
+          # If the files are missing at the root, create them so Gradle stops panicking
+          if [ ! -f settings.gradle.kts ]; then
+            echo 'rootProject.name = "SystemSync"' > settings.gradle.kts
+            echo 'include(":app")' >> settings.gradle.kts
+          fi
+          
+          if [ ! -f build.gradle.kts ]; then
+            echo 'plugins {' > build.gradle.kts
+            echo '    id("com.android.application") version "8.2.0" apply false' >> build.gradle.kts
+            echo '    id("org.jetbrains.kotlin.android") version "1.9.20" apply false' >> build.gradle.kts
+            echo '}' >> build.gradle.kts
+          fi
+
           gradle wrapper --gradle-version 8.5
           echo "sdk.dir=$ANDROID_SDK_ROOT" > local.properties
           
           chmod +x ./gradlew
-          
-          # Run build and capture EVERYTHING
-          ./gradlew assembleDebug --no-daemon --stacktrace > full_log.txt 2>&1 || true
-          
-          echo "### FULL BUILD LOG" >> $GITHUB_STEP_SUMMARY
-          echo '```text' >> $GITHUB_STEP_SUMMARY
-          # Print the last 30 lines of the log (where the real error hides)
-          tail -n 30 full_log.txt >> $GITHUB_STEP_SUMMARY
-          echo '```' >> $GITHUB_STEP_SUMMARY
-          
-          if [ ! -f app/build/outputs/apk/debug/app-debug.apk ]; then
-            exit 1
-          fi
+          ./gradlew assembleDebug --no-daemon --stacktrace
           
       - name: Upload APK
         if: always()
