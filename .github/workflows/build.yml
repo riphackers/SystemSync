@@ -17,14 +17,12 @@ jobs:
           distribution: temurin
           java-version: 17
           
-      - name: Setup SDK
-        run: echo "sdk.dir=$ANDROID_SDK_ROOT" > local.properties
-
       - name: Build with Gradle
         run: |
-          # Download Gradle directly instead of relying on wrappers or broken caches
           wget -q https://services.gradle.org/distributions/gradle-8.5-bin.zip
           unzip -q gradle-8.5-bin.zip
+          export ANDROID_HOME=$ANDROID_SDK_ROOT
+          export PATH=$PATH:$ANDROID_HOME/cmdline-tools/latest/bin
           ./gradle-8.5/bin/gradle assembleDebug --no-daemon --stacktrace
           
       - name: Upload APK
